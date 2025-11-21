@@ -1,9 +1,9 @@
 pluginManagement {
     repositories {
-        maven { url 'https://maven.neoforged.net/releases' }
         gradlePluginPortal()
+        maven { url 'https://maven.neoforged.net/releases' }
+        maven { url 'https://maven.neoforged.net/snapshots' } // Wichtig!
         mavenCentral()
     }
 }
-
 rootProject.name = "Mod"

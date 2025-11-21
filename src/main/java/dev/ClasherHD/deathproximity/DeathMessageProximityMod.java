@@ -1,67 +1,67 @@
 package dev.ClasherHD.deathproximity;
 
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.Vec3;
-
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-
-import java.util.List;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 
 @Mod(DeathMessageProximityMod.MODID)
 public class DeathMessageProximityMod {
     public static final String MODID = "deathproximity";
-
-    private static final int RADIUS_CHUNKS = 8;
+    private static final int RADIUS_CHUNKS = 12;
     private static final int RADIUS_BLOCKS = RADIUS_CHUNKS * 16;
 
     public DeathMessageProximityMod() {
-        MinecraftForge.EVENT_BUS.register(this);
+        // Registrierung beim NeoForge Event Bus
+        NeoForge.EVENT_BUS.register(this);
     }
 
     @SubscribeEvent
     public void onLivingDeath(LivingDeathEvent event) {
-        if (!(event.getEntity() instanceof ServerPlayer)) return;
-        ServerPlayer dead = (ServerPlayer) event.getEntity();
-        ServerLevel world = (ServerLevel) dead.getCommandSenderWorld();
-        MinecraftServer server = world.getServer();
+        // Prüfen, ob es ein Spieler ist
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+
+        MinecraftServer server = player.getServer();
         if (server == null) return;
 
-        Component deathMsg = event.getEntity().getDeathMessage(event.getSource());
-        if (deathMsg == null) return;
+        // Die Todesnachricht holen
+        Component deathMessage = event.getSource().getLocalizedDeathMessage(player);
 
-        BlockPos deathPos = dead.blockPosition();
-        double radiusSq = (double) RADIUS_BLOCKS * (double) RADIUS_BLOCKS;
+        // Position des Todes
+        BlockPos deathPos = player.blockPosition();
+        ServerLevel world = player.serverLevel();
 
-        boolean prevShow = server.getGameRules().getBoolean(net.minecraft.world.level.GameRules.RULE_SHOW_DEATH_MESSAGES);
+        // Gamerule holen und Status speichern
+        GameRules rules = server.getGameRules();
+        GameRules.BooleanValue showDeathMessages = rules.getRule(GameRules.RULE_SHOWDEATHMESSAGES);
+        boolean wasEnabled = showDeathMessages.get();
+
         try {
-            server.getGameRules().get(net.minecraft.world.level.GameRules.RULE_SHOW_DEATH_MESSAGES).set(false, server);
+            // Vanilla Nachricht temporär deaktivieren
+            showDeathMessages.set(false, server);
 
-            List<ServerPlayer> players = server.getPlayerList().getPlayers();
-            for (ServerPlayer p : players) {
-                try {
-                    if (!p.getLevel().dimension().equals(world.dimension())) continue;
+            // Manuell an Spieler in der Nähe senden
+            double radiusSq = RADIUS_BLOCKS * RADIUS_BLOCKS;
 
-                    Vec3 pv = p.position();
-                    double dx = pv.x() - (deathPos.getX() + 0.5);
-                    double dy = pv.y() - (deathPos.getY() + 0.5);
-                    double dz = pv.z() - (deathPos.getZ() + 0.5);
-                    double distSq = dx * dx + dy * dy + dz * dz;
+            for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+                // Nur an Spieler in der gleichen Dimension senden
+                if (p.serverLevel() != world) continue;
 
-                    if (distSq <= radiusSq) {
-                        p.sendSystemMessage(deathMsg, net.minecraft.server.level.ServerPlayer.NO_SIGNALS);
-                    }
-                } catch (Throwable t) { t.printStackTrace(); }
+                // Distanz prüfen
+                if (p.distanceToSqr(deathPos.getX(), deathPos.getY(), deathPos.getZ()) <= radiusSq) {
+                    p.sendSystemMessage(deathMessage);
+                }
             }
+
         } finally {
-            try { server.getGameRules().get(net.minecraft.world.level.GameRules.RULE_SHOW_DEATH_MESSAGES).set(prevShow, server); }
-            catch (Throwable ignored) {}
+            // Gamerule zurücksetzen, damit wir nichts dauerhaft kaputt machen
+            showDeathMessages.set(wasEnabled, server);
         }
     }
 }
