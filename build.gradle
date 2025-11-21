@@ -1,0 +1,17 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.example'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+    maven { url 'https://maven.neoforged.net/releases/' }
+}
+
+dependencies {
+    // Placeholder NeoForge version
+    implementation 'net.neoforged:neoforge:1.21.1-0.0.1'
+}
+

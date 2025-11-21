@@ -1,0 +1,10 @@
+loader="javafml"
+license="MIT"
+
+[[mods]]
+modId="deathproximity"
+version="1.0.0"
+displayName="Death Message Proximity"
+authors="User"
+description="Sends player death messages only to players near the death location (NeoForge 1.21.1)."
+entrypoints = { main = ["com.example.deathproximity.DeathMessageProximityMod"] }
