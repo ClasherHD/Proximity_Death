@@ -25,3 +25,16 @@ dependencies {
     // HIER WAR DER FEHLER: Wir benutzen 'implementation' statt 'minecraft'
     implementation "net.neoforged:neoforge:21.1.214"
 }
+jar {
+    manifest {
+        attributes([
+            "Specification-Title"     : "deathproximity",
+            "Specification-Vendor"    : "Clasher",
+            "Specification-Version"   : "1",
+            "Implementation-Title"    : project.name,
+            "Implementation-Version"  : project.jar.archiveVersion,
+            "Implementation-Vendor"   : "Sebastian",
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
