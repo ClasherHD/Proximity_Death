@@ -6,4 +6,4 @@ pluginManagement {
         mavenCentral()
     }
 }
-rootProject.name = "Mod"
+rootProject.name = "DeathMessageProximity"

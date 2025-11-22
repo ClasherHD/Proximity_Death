@@ -7,61 +7,68 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.core.BlockPos;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
 
 @Mod(DeathMessageProximityMod.MODID)
 public class DeathMessageProximityMod {
     public static final String MODID = "deathproximity";
-    private static final int RADIUS_CHUNKS = 12;
-    private static final int RADIUS_BLOCKS = RADIUS_CHUNKS * 16;
 
-    public DeathMessageProximityMod() {
-        // Registrierung beim NeoForge Event Bus
+    // Konstruktor mit ModContainer für die Config
+    public DeathMessageProximityMod(ModContainer modContainer) {
+        // 1. Config registrieren
+        modContainer.registerConfig(ModConfig.Type.SERVER, DeathProximityConfig.SERVER_SPEC);
+
+        // 2. Event Bus registrieren
         NeoForge.EVENT_BUS.register(this);
+    }
+
+    // --- Automatisch Gamerule setzen beim Serverstart ---
+    @SubscribeEvent
+    public void onServerStarted(ServerStartedEvent event) {
+        MinecraftServer server = event.getServer();
+        GameRules rules = server.getGameRules();
+
+        // Wir erzwingen 'false', damit Vanilla keine globalen Nachrichten sendet.
+        GameRules.BooleanValue showDeathMessages = rules.getRule(GameRules.RULE_SHOWDEATHMESSAGES);
+        if (showDeathMessages.get()) {
+            showDeathMessages.set(false, server);
+            // Optional: Log-Ausgabe zur Bestätigung
+            // System.out.println("DeathProximity: Gamerule automatisch deaktiviert.");
+        }
     }
 
     @SubscribeEvent
     public void onLivingDeath(LivingDeathEvent event) {
-        // Prüfen, ob es ein Spieler ist
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
 
         MinecraftServer server = player.getServer();
         if (server == null) return;
 
-        // Die Todesnachricht holen
+        // Nachricht holen
         Component deathMessage = event.getSource().getLocalizedDeathMessage(player);
 
-        // Position des Todes
         BlockPos deathPos = player.blockPosition();
         ServerLevel world = player.serverLevel();
 
-        // Gamerule holen und Status speichern
-        GameRules rules = server.getGameRules();
-        GameRules.BooleanValue showDeathMessages = rules.getRule(GameRules.RULE_SHOWDEATHMESSAGES);
-        boolean wasEnabled = showDeathMessages.get();
+        // Radius aus der Config holen!
+        int chunkRadius = DeathProximityConfig.SERVER.radiusChunks.get();
+        int blockRadius = chunkRadius * 16;
+        double radiusSq = blockRadius * blockRadius;
 
-        try {
-            // Vanilla Nachricht temporär deaktivieren
-            showDeathMessages.set(false, server);
+        // An Spieler in der Nähe senden
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            // 1. Gleiche Dimension?
+            if (p.serverLevel() != world) continue;
 
-            // Manuell an Spieler in der Nähe senden
-            double radiusSq = RADIUS_BLOCKS * RADIUS_BLOCKS;
-
-            for (ServerPlayer p : server.getPlayerList().getPlayers()) {
-                // Nur an Spieler in der gleichen Dimension senden
-                if (p.serverLevel() != world) continue;
-
-                // Distanz prüfen
-                if (p.distanceToSqr(deathPos.getX(), deathPos.getY(), deathPos.getZ()) <= radiusSq) {
-                    p.sendSystemMessage(deathMessage);
-                }
+            // 2. Distanz checken (Kugel-Radius)
+            if (p.distanceToSqr(deathPos.getX(), deathPos.getY(), deathPos.getZ()) <= radiusSq) {
+                p.sendSystemMessage(deathMessage);
             }
-
-        } finally {
-            // Gamerule zurücksetzen, damit wir nichts dauerhaft kaputt machen
-            showDeathMessages.set(wasEnabled, server);
         }
     }
 }
