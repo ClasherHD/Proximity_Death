@@ -20,24 +20,24 @@ public class DeathMessageProximityMod {
 
     // Konstruktor mit ModContainer für die Config
     public DeathMessageProximityMod(ModContainer modContainer) {
-        // 1. Config registrieren
+        // Config registrieren
         modContainer.registerConfig(ModConfig.Type.SERVER, DeathProximityConfig.SERVER_SPEC);
 
-        // 2. Event Bus registrieren
+        // Event Bus registrieren
         NeoForge.EVENT_BUS.register(this);
     }
 
-    // --- Automatisch Gamerule setzen beim Serverstart ---
+    // Automatisch Gamerule setzen beim Serverstart
     @SubscribeEvent
     public void onServerStarted(ServerStartedEvent event) {
         MinecraftServer server = event.getServer();
         GameRules rules = server.getGameRules();
 
-        // Wir erzwingen 'false', damit Vanilla keine globalen Nachrichten sendet.
+        // Erzwingen 'false', damit Vanilla keine globalen Nachrichten sendet
         GameRules.BooleanValue showDeathMessages = rules.getRule(GameRules.RULE_SHOWDEATHMESSAGES);
         if (showDeathMessages.get()) {
             showDeathMessages.set(false, server);
-            // Optional: Log-Ausgabe zur Bestätigung
+            // Log-Ausgabe zur Bestätigung (Optional)
             // System.out.println("DeathProximity: Gamerule automatisch deaktiviert.");
         }
     }
@@ -55,17 +55,17 @@ public class DeathMessageProximityMod {
         BlockPos deathPos = player.blockPosition();
         ServerLevel world = player.serverLevel();
 
-        // Radius aus der Config holen!
+        // Radius aus der Config holen
         int chunkRadius = DeathProximityConfig.SERVER.radiusChunks.get();
         int blockRadius = chunkRadius * 16;
         double radiusSq = blockRadius * blockRadius;
 
         // An Spieler in der Nähe senden
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
-            // 1. Gleiche Dimension?
+            // Prüft gleiche Dimension
             if (p.serverLevel() != world) continue;
 
-            // 2. Distanz checken (Kugel-Radius)
+            // Distanz checken (Kugel-Radius)
             if (p.distanceToSqr(deathPos.getX(), deathPos.getY(), deathPos.getZ()) <= radiusSq) {
                 p.sendSystemMessage(deathMessage);
             }
