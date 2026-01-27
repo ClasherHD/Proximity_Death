@@ -1,0 +1,24 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="MIT"
+
+[[mods]]
+modId="deathproximity"
+version="1.0.0"
+displayName="Death Message Proximity"
+authors="Clasher"
+description="Zeigt Todesnachrichten nur Spielern in der Nähe an."
+
+[[dependencies.deathproximity]]
+    modId="neoforge"
+    type="required"
+    versionRange="[21.1,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.deathproximity]]
+    modId="minecraft"
+    type="required"
+    versionRange="[1.21.1,)"
+    ordering="NONE"
+    side="BOTH"
