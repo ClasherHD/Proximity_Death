@@ -1,4 +1,26 @@
-# Project exclude paths
-/.gradle/
-/build/
-/build/classes/java/main/
+# Gradle
+.gradle/
+build/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Runtime
+run/
+logs/
+crash-reports/

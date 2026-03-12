@@ -1,0 +1,8 @@
+{
+    "required": true,
+    "package": "dev.ClasherHD.deathproximity.mixin",
+    "compatibilityLevel": "JAVA_21",
+    "mixins": [
+        "DeathMessageMixin"
+    ]
+}

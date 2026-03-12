@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'eclipse'
     id 'net.neoforged.moddev' version '1.0.21'
 }
 
@@ -16,9 +17,14 @@ repositories {
     maven { url "https://maven.neoforged.net/snapshots" }
 }
 
-// Wichtig: Großes 'F' bei neoForge
 neoForge {
     version = "21.1.214"
+
+    mods {
+        deathproximity {
+            sourceSet sourceSets.main
+        }
+    }
 }
 
 dependencies {
