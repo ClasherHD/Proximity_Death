@@ -30,7 +30,7 @@ public class DeathMessageProximityMod {
         MinecraftServer server = player.getServer();
         if (server == null) return;
 
-        Component deathMessage = event.getSource().getLocalizedDeathMessage(player);
+        Component deathMessage = player.getCombatTracker().getDeathMessage();
 
         BlockPos deathPos = player.blockPosition();
         ServerLevel world = player.serverLevel();
