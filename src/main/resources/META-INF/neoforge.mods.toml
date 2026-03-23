@@ -8,7 +8,7 @@ version="1.0.0"
 displayName="Death Message Proximity"
 authors="Clasher"
 description="Zeigt Todesnachrichten nur Spielern in der Nähe an."
-mixins = ["deathproximity.mixins.json"]
+mixinConfigs = ["deathproximity.mixins.json"]
 
 [[dependencies.deathproximity]]
     modId="neoforge"

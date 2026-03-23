@@ -1,19 +1,22 @@
 package dev.ClasherHD.deathproximity.mixin;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.server.players.PlayerList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(ServerPlayer.class)
+@Mixin(PlayerList.class)
 public abstract class DeathMessageMixin {
 
-    @Redirect(
-            method = "die",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;broadcastSystemMessage(Lnet/minecraft/network/chat/Component;Z)V")
-    )
-    private void deathproximity$redirectBroadcast(PlayerList instance, Component component, boolean b) {
+    @Inject(method = "broadcastSystemMessage", at = @At("HEAD"), cancellable = true)
+    private void deathproximity$suppressGlobalDeathMessage(Component message, boolean bypassHiddenChat, CallbackInfo ci) {
+        if (message.getContents() instanceof TranslatableContents contents) {
+            if (contents.getKey().startsWith("death.")) {
+                ci.cancel();
+            }
+        }
     }
 }
